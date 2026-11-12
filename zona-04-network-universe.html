@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Informatika Virtual World — Zona 04: Network Universe</title>
+<style>
+  :root {
+    --bg-dark: #050914;
+    --panel-bg: rgba(10, 18, 36, 0.92);
+    --panel-border: rgba(56, 189, 248, 0.40);
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.45);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --purple: #a855f7;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --font-ui: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-dark);
+    font-family: var(--font-ui);
+    color: var(--text-main);
+    touch-action: none;
+  }
+
+  #scene-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    z-index: 1;
+  }
+
+  /* HUD Layer Overlay */
+  .hud-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 12px;
+  }
+
+  /* Top Bar */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+
+  .brand-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    padding: 6px 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+  }
+
+  .zone-badge {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 10px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .mission-title h1 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .mission-title p {
+    font-size: 10.5px;
+    color: #38bdf8;
+    font-weight: 600;
+  }
+
+  /* Mission Switcher */
+  .mission-switcher {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    padding: 5px 8px;
+    border-radius: 12px;
+  }
+
+  .mission-btn {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mission-btn:hover {
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .mission-btn.active {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #0f172a;
+    border-color: #bae6fd;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  }
+
+  .mission-btn .done-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    display: none;
+  }
+
+  .mission-btn.completed .done-dot {
+    display: inline-block;
+  }
+
+  .stats-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    padding: 5px 10px;
+    border-radius: 12px;
+  }
+
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 7px;
+    background: rgba(30, 41, 59, 0.85);
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+  }
+
+  .stat-pill span.val {
+    color: var(--accent);
+  }
+
+  .xp-bar-wrap {
+    width: 54px;
+    height: 5px;
+    background: #1e293b;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #10b981);
+    transition: width 0.4s ease;
+  }
+
+  .icon-btn {
+    background: rgba(30, 41, 59, 0.92);
+    border: 1px solid var(--panel-border);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .icon-btn:hover, .icon-btn:active {
+    background: var(--accent);
+    color: #0f172a;
+  }
+
+  /* Middle Area */
+  .middle-area {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .inspector-panel {
+    pointer-events: auto;
+    width: 275px;
+    max-width: calc(100vw - 24px);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.55);
+  }
+
+  .inspector-panel.collapsed .inspector-body {
+    display: none;
+  }
+
+  .inspector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    cursor: pointer;
+  }
+
+  .inspector-header h2 {
+    font-size: 12px;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inspector-body h3 {
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+
+  .inspector-body p {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #cbd5e1;
+    margin-bottom: 7px;
+  }
+
+  .slot-hint {
+    font-size: 10.5px;
+    background: rgba(56, 189, 248, 0.12);
+    border-left: 3px solid var(--accent);
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #bae6fd;
+    font-family: var(--font-mono);
+  }
+
+  .net-metrics-widget {
+    margin-top: 7px;
+    background: rgba(2, 6, 23, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 10.5px;
+    font-family: var(--font-mono);
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    color: #cbd5e1;
+  }
+
+  .metric-row strong {
+    color: #38bdf8;
+  }
+
+  /* Right Challenge Card */
+  .challenge-card {
+    pointer-events: auto;
+    width: 335px;
+    max-width: calc(100vw - 24px);
+    background: rgba(10, 18, 36, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    backdrop-filter: blur(14px);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+  }
+
+  .ch-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .ch-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    background: rgba(56, 189, 248, 0.22);
+    color: #bae6fd;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+  }
+
+  .dir-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.45);
+  }
+
+  .challenge-card h3 {
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .challenge-card p {
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .target-display {
+    background: #020617;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .target-display small {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .target-display strong {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: #38bdf8;
+    letter-spacing: 0.5px;
+  }
+
+  .action-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #0284c7, #10b981);
+    color: #fff;
+    border: none;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  }
+
+  .action-submit-btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-grid-dual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .btn-danger-action {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .btn-warning-action {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  /* Toast Banner */
+  .feedback-toast {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid var(--accent);
+    color: #fff;
+    padding: 9px 15px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    max-width: 90vw;
+    text-align: center;
+    z-index: 30;
+  }
+
+  .feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .feedback-toast.error {
+    border-color: var(--danger);
+    background: rgba(69, 10, 10, 0.96);
+  }
+
+  .feedback-toast.success {
+    border-color: var(--success);
+    background: rgba(6, 78, 59, 0.96);
+  }
+
+  /* Bottom Dock */
+  .bottom-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: auto;
+    width: 100%;
+  }
+
+  .net-dock {
+    flex: 1;
+    background: rgba(10, 18, 36, 0.90);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 8px 12px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.55);
+  }
+
+  .net-dock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+  }
+
+  .node-grid-dock {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .node-card-btn {
+    flex: 1;
+    max-width: 125px;
+    min-width: 85px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1.5px solid rgba(148, 163, 184, 0.3);
+    border-radius: 9px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .node-card-btn.connected {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: #10b981;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  }
+
+  .node-card-btn.active-target {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  }
+
+  .node-card-btn .n-icon { font-size: 18px; margin-bottom: 2px; }
+  .node-card-btn .n-name { font-size: 11px; font-weight: 800; color: #e2e8f0; }
+  .node-card-btn .n-status { font-size: 9.5px; color: #94a3b8; font-family: var(--font-mono); }
+  .node-card-btn.connected .n-status { color: #6ee7b7; }
+
+  /* Modals */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.84);
+    backdrop-filter: blur(6px);
+    z-index: 40;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    pointer-events: auto;
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .modal-card {
+    background: #0f172a;
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    max-width: 490px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-card h2 { font-size: 18px; color: #38bdf8; margin-bottom: 6px; }
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  .score-item {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .score-item label { display: block; font-size: 11px; color: var(--text-muted); }
+  .score-item strong { font-size: 15px; color: #fff; }
+
+  .primary-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #0284c7, #10b981);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .world-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .world-item {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .world-item.active-zone {
+    border-color: var(--accent);
+    background: rgba(2, 132, 199, 0.22);
+  }
+
+  .world-item h4 { font-size: 13px; color: #fff; margin-bottom: 3px; }
+  .world-item p { font-size: 11px; color: var(--text-muted); }
+
+  @media (max-width: 820px) {
+    .hud-layer { padding: 6px; }
+    .brand-card { padding: 5px 9px; }
+    .mission-title h1 { font-size: 11.5px; }
+    .mission-btn { font-size: 10px; padding: 4px 7px; }
+    .inspector-panel { width: 215px; padding: 7px 9px; }
+    .challenge-card { width: 275px; padding: 9px 10px; }
+    .node-grid-dock { gap: 4px; }
+    .node-card-btn { min-width: 65px; padding: 4px 5px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene-canvas"></canvas>
+
+<div class="hud-layer">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand-card">
+      <span class="zone-badge">Zona 04</span>
+      <div class="mission-title">
+        <h1>Network Universe v3.0</h1>
+        <p id="active-mission-subtitle">Misi 1: City Fiber & LAN Architect</p>
+      </div>
+    </div>
+
+    <!-- MISSION SWITCHER -->
+    <div class="mission-switcher">
+      <button class="mission-btn active" data-mission="build" id="m-btn-build">
+        🏙️ City Cable Architect <span class="done-dot"></span>
+      </button>
+      <button class="mission-btn" data-mission="topology" id="m-btn-topology">
+        📐 Topology Stress-Test <span class="done-dot"></span>
+      </button>
+      <button class="mission-btn" data-mission="packet" id="m-btn-packet">
+        ⚡ Packet Traffic Arcade <span class="done-dot"></span>
+      </button>
+      <button class="mission-btn" data-mission="troubleshoot" id="m-btn-troubleshoot">
+        🛸 Drone Diagnostic <span class="done-dot"></span>
+      </button>
+    </div>
+
+    <div class="stats-group">
+      <div class="stat-pill">
+        <span>LVL</span>
+        <span class="val" id="hud-level">1</span>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="hud-xp-bar"></div></div>
+      </div>
+      <div class="stat-pill">
+        <span>XP</span>
+        <span class="val" id="hud-xp">0</span>
+      </div>
+      <a href="index.html" class="icon-btn" style="text-decoration:none;background:rgba(124,58,237,0.35);border-color:#a855f7;" title="Kembali ke Menu Utama">🏠 Lobi</a>
+      <button class="icon-btn" id="btn-world" title="Peta Dunia Informatika">🌐 Dunia</button>
+      <button class="icon-btn" id="btn-cam-reset" title="Reset Kamera">🎥 Reset</button>
+      <button class="icon-btn" id="btn-reset-zone" title="Ulangi Misi Aktif">🔄 Ulang</button>
+    </div>
+  </div>
+
+  <!-- MIDDLE FLOATING PANELS -->
+  <div class="middle-area">
+    <div class="inspector-panel" id="inspector-panel">
+      <div class="inspector-header" id="inspector-toggle">
+        <h2>🌐 Panduan Jaringan Komputer</h2>
+        <span style="font-size:11px;color:#94a3b8;" id="inspector-toggle-icon">▼</span>
+      </div>
+      <div class="inspector-body">
+        <h3 id="info-title">Arsitektur Jaringan LAN & WAN</h3>
+        <p id="info-desc">Jaringan komputer menghubungkan node gedung melalui kabel Fiber/UTP atau Wi-Fi untuk menyalurkan data cepat.</p>
+        <div class="slot-hint" id="info-hint">ISP Core ➔ Core Router ➔ Switch Gedung ➔ Node Client</div>
+        <div id="inspector-extra"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT INTERACTIVE CHALLENGE CARD -->
+    <div class="challenge-card" id="challenge-card">
+      <div class="ch-top-row">
+        <span class="ch-badge" id="ch-badge">Misi 1 • Langkah 1 / 5</span>
+        <span class="dir-pill" id="ch-dir-pill">CITY ARCHITECT</span>
+      </div>
+      <h3 id="ch-title">Hubungkan ISP Core ke Router Utama</h3>
+      <p id="ch-desc">Klik node ISP Core (Kota) dan tarik kabel Fiber Optik ke Router Utama Sekolah di peta 3D!</p>
+      <div id="ch-dynamic-area"></div>
+    </div>
+
+    <div class="feedback-toast" id="feedback-toast">Pesan sistem</div>
+  </div>
+
+  <!-- BOTTOM INTERACTIVE NETWORK DOCK -->
+  <div class="bottom-area">
+    <div class="net-dock">
+      <div class="net-dock-header">
+        <span id="dock-left-label"><strong>Papan Node Jaringan Kota & Sekolah</strong></span>
+        <span id="dock-right-readout" style="font-family:var(--font-mono);color:#38bdf8;font-weight:700;">STATUS SINYAL: DISCONNECTED</span>
+      </div>
+      <div class="node-grid-dock" id="node-grid-dock"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESULT -->
+<div class="modal-backdrop" id="modal-result">
+  <div class="modal-card">
+    <h2 id="res-heading">🎉 Misi Network Universe Selesai!</h2>
+    <p id="res-sub" style="font-size:13px;color:#cbd5e1;margin-bottom:8px;">Penjelasan ringkas hasil misi.</p>
+    <div class="score-grid" id="res-grid"></div>
+    <div style="background:rgba(56,189,248,0.16);border:1px solid #38bdf8;padding:10px;border-radius:10px;text-align:center;margin-bottom:8px;">
+      <div style="font-size:12px;color:#bae6fd;">Skor Akhir & Reward</div>
+      <div style="font-size:20px;font-weight:800;color:#fff;" id="res-total">100 / 100 (+250 XP)</div>
+      <div style="font-size:11px;color:#10b981;margin-top:2px;" id="res-badge">🏅 Badge Terbuka: Network Architect</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="primary-btn" id="btn-close-result" style="background:#334155;">Tetap di Sini</button>
+      <button class="primary-btn" id="btn-next-mission">Lanjut Misi Berikutnya ➔</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL WORLD MAP -->
+<div class="modal-backdrop" id="modal-world">
+  <div class="modal-card">
+    <h2>🌐 Informatika Virtual World</h2>
+    <p style="font-size:12px;color:#94a3b8;">Peta kurikulum interaktif SMP (6 Zona Pembelajaran):</p>
+    <div class="world-list">
+      <div class="world-item">
+        <h4>01. Computer Engineering Zone (Selesai ✓)</h4>
+        <p>Build Your First PC • Hardware Identification • PC Doctor Troubleshooting</p>
+      </div>
+      <div class="world-item">
+        <h4>02. Digital Logic World (Selesai ✓)</h4>
+        <p>Biner ↔ Desimal • Konversi Antar-Basis • 7 Gerbang Logika Dasar</p>
+      </div>
+      <div class="world-item">
+        <h4>03. Cyber Security Center (Selesai ✓)</h4>
+        <p>Password Defender • Phishing Detective • Digital Footprint • Privacy Shield</p>
+      </div>
+      <div class="world-item active-zone">
+        <h4>04. Network Universe (Aktif)</h4>
+        <p>City Fiber Architect • Topology Stress-Test • Packet Traffic Arcade • Drone Diagnostic</p>
+      </div>
+      <div class="world-item">
+        <h4>05. Digital Information City</h4>
+        <p>Search Engine Explorer • Information Detective • Hoax Hunter • Digital Journalism</p>
+      </div>
+      <div class="world-item">
+        <h4>06. Algorithm & Coding Lab</h4>
+        <p>Algorithm Builder • Flowchart Puzzle • Coding Challenge • Debugging Mission</p>
+      </div>
+    </div>
+    <button class="primary-btn" id="btn-close-world">Kembali ke Network Universe</button>
+  </div>
+</div>
+
+<script>
+/**
+ * INFORMATIKA VIRTUAL WORLD - ZONA 04: NETWORK UNIVERSE v3.0
+ * Fitur Perbaikan Utama:
+ * 1. Z-Sorting Platform Base fix: Dasar platform biru dikunci di depth (-999) agar tidak pernah menutupi objek 3D/teks.
+ * 2. Model 3D Komposit Detail & Realistis (ISP Satellite Cloud Gateway, Router 4-Antena, Switch Rackmount 1U, Wi-Fi Sectoral Tower, Blade Server Enclosure, PC Lab Workstation).
+ * 3. Perbesaran Proporsional Ikon HD & Label Badge anti-clipping di lapisan atas canvas.
+ */
+
+// ==========================================
+// 1. SHARED SAVE MANAGER
+// ==========================================
+const SaveManager = {
+  KEY: 'ivw_progress_v2',
+  data: {
+    xp: 0,
+    level: 1,
+    coins: 0,
+    badges: [],
+    zones: {
+      zone_01: { assembly: { completed: false, bestScore: 0 }, quiz: { completed: false, bestScore: 0 }, troubleshoot: { completed: false, bestScore: 0 } },
+      zone_02: { binary: { completed: false, bestScore: 0 }, radix: { completed: false, bestScore: 0 }, gates: { completed: false, bestScore: 0 } },
+      zone_03: { passwords: { completed: false, bestScore: 0 }, phishing: { completed: false, bestScore: 0 }, footprint: { completed: false, bestScore: 0 }, privacy: { completed: false, bestScore: 0 } },
+      zone_04: { build: { completed: false, bestScore: 0 }, topology: { completed: false, bestScore: 0 }, packet: { completed: false, bestScore: 0 }, troubleshoot: { completed: false, bestScore: 0 } }
+    }
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.data.xp = parsed.xp || 0;
+        this.data.level = parsed.level || 1;
+        this.data.coins = parsed.coins || 0;
+        this.data.badges = parsed.badges || [];
+        if (parsed.zones) {
+          this.data.zones.zone_01 = Object.assign(this.data.zones.zone_01, parsed.zones.zone_01 || {});
+          this.data.zones.zone_02 = Object.assign(this.data.zones.zone_02, parsed.zones.zone_02 || {});
+          this.data.zones.zone_03 = Object.assign(this.data.zones.zone_03, parsed.zones.zone_03 || {});
+          this.data.zones.zone_04 = Object.assign(this.data.zones.zone_04, parsed.zones.zone_04 || {});
+        }
+      }
+    } catch (e) {}
+    this.updateHUD();
+  },
+  save() {
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(this.data));
+    } catch (e) {}
+    this.updateHUD();
+  },
+  addReward(missionKey, xpGain, coinGain, score, badgeName) {
+    this.data.xp += xpGain;
+    this.data.coins += coinGain;
+    this.data.level = Math.floor(this.data.xp / 250) + 1;
+    if (badgeName && !this.data.badges.includes(badgeName)) {
+      this.data.badges.push(badgeName);
+    }
+    const m = this.data.zones.zone_04[missionKey];
+    if (m) {
+      m.completed = true;
+      if (score > m.bestScore) m.bestScore = score;
+    }
+    this.save();
+  },
+  updateHUD() {
+    document.getElementById('hud-level').textContent = this.data.level;
+    document.getElementById('hud-xp').textContent = this.data.xp;
+    const progress = (this.data.xp % 250) / 250 * 100;
+    document.getElementById('hud-xp-bar').style.width = progress + '%';
+
+    const z4 = this.data.zones.zone_04;
+    document.getElementById('m-btn-build').classList.toggle('completed', !!z4.build.completed);
+    document.getElementById('m-btn-topology').classList.toggle('completed', !!z4.topology.completed);
+    document.getElementById('m-btn-packet').classList.toggle('completed', !!z4.packet.completed);
+    document.getElementById('m-btn-troubleshoot').classList.toggle('completed', !!z4.troubleshoot.completed);
+  }
+};
+
+// ==========================================
+// 2. ISOMETRIC 3D ENGINE & DEVICE COORDINATES
+// ==========================================
+const canvas = document.getElementById('scene-canvas');
+const ctx = canvas.getContext('2d');
+
+const Camera = {
+  yaw: 0.45,
+  pitch: 0.52,
+  zoom: 1.0,
+  targetX: 0,
+  targetY: 0.35,
+  targetZ: 0,
+  reset() {
+    this.yaw = 0.45;
+    this.pitch = 0.52;
+    this.zoom = window.innerWidth < 820 ? 0.78 : 1.0;
+    this.targetX = 0;
+    this.targetY = 0.35;
+    this.targetZ = 0;
+  }
+};
+Camera.reset();
+
+// City Network Device Nodes with Enhanced Detailed Dimensions
+const NODE_LIST = [
+  { id: 'isp',     name: 'ISP Core Gateway',  icon: '🌐', pos: [-2.2, 0.25, -1.2], color: '#38bdf8', type: 'isp',     desc: 'Pusat Penyedia Internet Kota (Backbone Fiber)' },
+  { id: 'router',  name: 'Router Sekolah',    icon: '🎛️', pos: [-1.0, 0.25, -0.4], color: '#0284c7', type: 'router',  desc: 'Router Enterprise Utama Penyaring IP' },
+  { id: 'switch',  name: 'Core Switch 1U',    icon: '🔌', pos: [ 0.2, 0.25,  0.4], color: '#10b981', type: 'switch',  desc: 'Switch Distribusi 24-Port Gigabit' },
+  { id: 'server',  name: 'Server Rack Sekolah',icon: '🖥️', pos: [ 1.4, 0.35, -0.8], color: '#a855f7', type: 'server',  desc: 'Server Blade Data & LMS Pembelajaran' },
+  { id: 'wifi',    name: 'Wi-Fi Sectoral Tower',icon: '📡', pos: [ 0.0, 0.65, -1.4], color: '#f59e0b', type: 'wifi',    desc: 'Menara Access Point Nirkabel 5GHz' },
+  { id: 'pc_lab',  name: 'PC Workstation Lab',icon: '💻', pos: [ 1.8, 0.25,  1.0], color: '#38bdf8', type: 'pc',      desc: 'Set Komputer Client Lab Informatika' }
+];
+
+function transformPoint(x, y, z) {
+  let px = x - Camera.targetX;
+  let py = y - Camera.targetY;
+  let pz = z - Camera.targetZ;
+
+  const cy = Math.cos(Camera.yaw), sy = Math.sin(Camera.yaw);
+  const rx = px * cy - pz * sy;
+  const rz = px * sy + pz * cy;
+
+  const cp = Math.cos(Camera.pitch), sp = Math.sin(Camera.pitch);
+  const ry = py * cp - rz * sp;
+  const rz2 = py * sp + rz * cp;
+
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const scale = Math.min(w, h) * 0.22 * Camera.zoom;
+
+  return {
+    sx: w * 0.5 + rx * scale,
+    sy: h * 0.46 - ry * scale,
+    depth: rz2
+  };
+}
+
+function adjustColor(hex, factor) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = Math.min(255, Math.max(0, Math.round(((num >> 16) & 255) * factor)));
+  let g = Math.min(255, Math.max(0, Math.round(((num >> 8) & 255) * factor)));
+  let b = Math.min(255, Math.max(0, Math.round((num & 255) * factor)));
+  return `rgb(${r},${g},${b})`;
+}
+
+let renderQueue = [];
+
+function queueBox(cx, cy, cz, sx, sy, sz, baseHex, options = {}) {
+  const hx = sx / 2, hy = sy / 2, hz = sz / 2;
+  const verts = [
+    [cx - hx, cy - hy, cz - hz],
+    [cx + hx, cy - hy, cz - hz],
+    [cx + hx, cy + hy, cz - hz],
+    [cx - hx, cy + hy, cz - hz],
+    [cx - hx, cy - hy, cz + hz],
+    [cx + hx, cy - hy, cz + hz],
+    [cx + hx, cy + hy, cz + hz],
+    [cx - hx, cy + hy, cz + hz]
+  ];
+  const tVerts = verts.map(v => transformPoint(v[0], v[1], v[2]));
+  const faces = [
+    { idx: [4, 5, 6, 7], light: 1.05, tag: 'front' },
+    { idx: [1, 0, 3, 2], light: 0.65, tag: 'back' },
+    { idx: [7, 6, 2, 3], light: 1.25, tag: 'top' },
+    { idx: [0, 1, 5, 4], light: 0.50, tag: 'bottom' },
+    { idx: [5, 1, 2, 6], light: 0.88, tag: 'right' },
+    { idx: [0, 4, 7, 3], light: 0.78, tag: 'left' }
+  ];
+
+  faces.forEach(f => {
+    const p0 = tVerts[f.idx[0]], p1 = tVerts[f.idx[1]], p2 = tVerts[f.idx[2]], p3 = tVerts[f.idx[3]];
+    const cross = (p1.sx - p0.sx) * (p2.sy - p0.sy) - (p1.sy - p0.sy) * (p2.sx - p0.sx);
+    if (cross >= 0 && !options.isPlatform) return;
+
+    // Use extreme negative depth for platform base so it ALWAYS stays behind 3D models!
+    const avgDepth = options.isPlatform ? -999 : ((p0.depth + p1.depth + p2.depth + p3.depth) * 0.25 + (options.depthBias || 0));
+    renderQueue.push({
+      type: 'poly',
+      pts: [p0, p1, p2, p3],
+      depth: avgDepth,
+      fill: options.unlit ? baseHex : adjustColor(baseHex, f.light),
+      stroke: options.stroke || 'rgba(15, 23, 42, 0.45)'
+    });
+  });
+}
+
+function queueCable(p1, p2, thickness, color, isPulse = false) {
+  const tp1 = transformPoint(p1[0], p1[1], p1[2]);
+  const tp2 = transformPoint(p2[0], p2[1], p2[2]);
+  const avgDepth = (tp1.depth + tp2.depth) * 0.5 - 50;
+
+  renderQueue.push({
+    type: 'cable',
+    pts: [tp1, tp2],
+    depth: avgDepth,
+    thickness: thickness * Camera.zoom,
+    color,
+    isPulse
+  });
+}
+
+function flushRenderQueue() {
+  renderQueue.sort((a, b) => a.depth - b.depth);
+  for (const item of renderQueue) {
+    ctx.save();
+    if (item.type === 'poly') {
+      const pts = item.pts;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].sx, pts[0].sy);
+      ctx.lineTo(pts[1].sx, pts[1].sy);
+      ctx.lineTo(pts[2].sx, pts[2].sy);
+      ctx.lineTo(pts[3].sx, pts[3].sy);
+      ctx.closePath();
+      ctx.fillStyle = item.fill;
+      ctx.fill();
+      if (item.stroke) {
+        ctx.strokeStyle = item.stroke;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    } else if (item.type === 'cable') {
+      const [p1, p2] = item.pts;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p1.sx, p1.sy);
+      ctx.lineTo(p2.sx, p2.sy);
+      ctx.strokeStyle = '#030712';
+      ctx.lineWidth = item.thickness + 2.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(p1.sx, p1.sy);
+      ctx.lineTo(p2.sx, p2.sy);
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = item.thickness;
+      ctx.stroke();
+
+      if (item.isPulse) {
+        const t = (Date.now() % 1200) / 1200;
+        const px = p1.sx + (p2.sx - p1.sx) * t;
+        const py = p1.sy + (p2.sy - p1.sy) * t;
+        ctx.beginPath();
+        ctx.arc(px, py, item.thickness * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  renderQueue = [];
+}
+
+// ==========================================
+// 3. COMPOSITE 3D DEVICE MODEL RENDERERS
+// ==========================================
+function drawISPCloudGateway(x, y, z, baseHex) {
+  // Pedestal base
+  queueBox(x, y, z, 0.75, 0.15, 0.75, '#1e293b');
+  queueBox(x, y + 0.1, z, 0.55, 0.10, 0.55, '#0284c7');
+
+  // Main Satellite Dish Mast & Ring Structure
+  queueBox(x, y + 0.35, z, 0.12, 0.50, 0.12, '#38bdf8', { unlit: true });
+  queueBox(x, y + 0.55, z, 0.65, 0.08, 0.65, baseHex, { unlit: true });
+  queueBox(x, y + 0.65, z, 0.45, 0.16, 0.45, '#ffffff', { unlit: true, depthBias: 0.05 });
+  queueBox(x, y + 0.75, z, 0.10, 0.20, 0.10, '#ef4444', { unlit: true, depthBias: 0.08 });
+}
+
+function drawEnterpriseRouter(x, y, z, baseHex) {
+  // Main Router Chassis Body (Flat & Wide)
+  queueBox(x, y, z, 0.85, 0.18, 0.60, '#0f172a');
+  queueBox(x, y + 0.06, z + 0.02, 0.80, 0.08, 0.54, baseHex);
+
+  // Blinking Front LED Strip
+  const blink = Math.floor(Date.now() / 250) % 2 === 0;
+  queueBox(x - 0.28, y + 0.06, z + 0.28, 0.12, 0.04, 0.03, blink ? '#10b981' : '#059669', { unlit: true, depthBias: 0.1 });
+  queueBox(x - 0.12, y + 0.06, z + 0.28, 0.12, 0.04, 0.03, '#38bdf8', { unlit: true, depthBias: 0.1 });
+  queueBox(x + 0.04, y + 0.06, z + 0.28, 0.12, 0.04, 0.03, '#f59e0b', { unlit: true, depthBias: 0.1 });
+
+  // 4 Upright Dual-Band Antennas on back corners
+  const antH = 0.52;
+  queueBox(x - 0.36, y + 0.30, z - 0.24, 0.05, antH, 0.05, '#1e293b');
+  queueBox(x - 0.12, y + 0.30, z - 0.24, 0.05, antH, 0.05, '#1e293b');
+  queueBox(x + 0.12, y + 0.30, z - 0.24, 0.05, antH, 0.05, '#1e293b');
+  queueBox(x + 0.36, y + 0.30, z - 0.24, 0.05, antH, 0.05, '#1e293b');
+}
+
+function drawCoreSwitch(x, y, z, baseHex) {
+  // Wide 1U Metal Rackmount Chassis
+  queueBox(x, y, z, 0.95, 0.20, 0.50, '#1e293b');
+  queueBox(x, y + 0.05, z, 0.90, 0.12, 0.46, baseHex);
+
+  // Front Panel RJ45 Port Array (8 Port Blocks)
+  for (let i = 0; i < 6; i++) {
+    const px = x - 0.35 + i * 0.14;
+    const isLit = (i % 2 === 0);
+    queueBox(px, y + 0.05, z + 0.23, 0.09, 0.07, 0.03, isLit ? '#10b981' : '#334155', { unlit: isLit, depthBias: 0.1 });
+  }
+}
+
+function drawWiFiTower(x, y, z, baseHex) {
+  // Base Stand
+  queueBox(x, y, z, 0.60, 0.12, 0.60, '#1e293b');
+
+  // Multi-Tier Lattice Tower Structure
+  queueBox(x, y + 0.30, z, 0.22, 0.55, 0.22, '#475569');
+  queueBox(x, y + 0.65, z, 0.14, 0.50, 0.14, '#38bdf8');
+
+  // Sectoral Antenna Dish at Top
+  queueBox(x, y + 0.95, z, 0.45, 0.15, 0.18, baseHex, { unlit: true, depthBias: 0.1 });
+  queueBox(x, y + 1.05, z, 0.10, 0.18, 0.10, '#ef4444', { unlit: true, depthBias: 0.12 });
+}
+
+function drawServerRack(x, y, z, baseHex) {
+  // Tall Dark Server Enclosure Cabinet
+  queueBox(x, y + 0.30, z, 0.70, 0.90, 0.70, '#0f172a');
+
+  // 4 Blade Server Slots Inside
+  for (let i = 0; i < 4; i++) {
+    const sy = y + 0.05 + i * 0.18;
+    const isLit = (Math.floor(Date.now() / 400 + i) % 2 === 0);
+    queueBox(x, sy, z + 0.32, 0.60, 0.12, 0.04, baseHex, { depthBias: 0.1 });
+    queueBox(x - 0.22, sy, z + 0.34, 0.06, 0.05, 0.02, isLit ? '#10b981' : '#0284c7', { unlit: true, depthBias: 0.12 });
+    queueBox(x - 0.14, sy, z + 0.34, 0.06, 0.05, 0.02, '#a855f7', { unlit: true, depthBias: 0.12 });
+  }
+}
+
+function drawPCLabWorkstation(x, y, z, baseHex) {
+  // Wooden Desk Surface
+  queueBox(x, y, z, 0.85, 0.10, 0.65, '#334155');
+  queueBox(x - 0.35, y - 0.15, z - 0.22, 0.08, 0.30, 0.08, '#1e293b');
+  queueBox(x + 0.35, y - 0.15, z - 0.22, 0.08, 0.30, 0.08, '#1e293b');
+  queueBox(x - 0.35, y - 0.15, z + 0.22, 0.08, 0.30, 0.08, '#1e293b');
+  queueBox(x + 0.35, y - 0.15, z + 0.22, 0.08, 0.30, 0.08, '#1e293b');
+
+  // Glowing Monitor
+  queueBox(x - 0.10, y + 0.25, z - 0.05, 0.48, 0.34, 0.06, '#0f172a');
+  queueBox(x - 0.10, y + 0.25, z - 0.02, 0.42, 0.28, 0.02, baseHex, { unlit: true, depthBias: 0.1 });
+
+  // CPU Tower standing beside monitor
+  queueBox(x + 0.25, y + 0.20, z, 0.18, 0.35, 0.45, '#1e293b');
+  queueBox(x + 0.25, y + 0.28, z + 0.21, 0.08, 0.05, 0.02, '#10b981', { unlit: true, depthBias: 0.12 });
+
+  // Keyboard
+  queueBox(x - 0.10, y + 0.06, z + 0.15, 0.38, 0.03, 0.16, '#1e293b');
+}
+
+// ==========================================
+// 4. GAME STATE MANAGEMENT
+// ==========================================
+const LogicState = {
+  mission: 'build', // 'build' | 'topology' | 'packet' | 'troubleshoot'
+  stepIdx: 0,
+  mistakes: 0,
+
+  // Misi 1: City Build Connections
+  cablesConnected: {
+    isp_router: false,
+    router_switch: false,
+    switch_server: false,
+    switch_wifi: false,
+    switch_pc_lab: false
+  },
+
+  // Misi 2: Topology Simulator
+  topologyType: 'STAR',
+  stressTesting: false,
+
+  // Misi 3: Packet Arcade Game
+  packetSwitchState: 'PATH_A',
+  firewallMode: 'ALLOW_ALL',
+  arcadeScore: 0,
+
+  // Misi 4: Drone Diagnostic Radar
+  dronePos: { x: -2.2, y: 1.1, z: -1.2 },
+  targetNodeId: 'router',
+  nodeFaults: {
+    router: { status: 'FAULT', type: 'IP_CONFLICT', fixed: false, hint: 'Konflik IP Address! Ganti ke DHCP Server.' },
+    wifi: { status: 'FAULT', type: 'CHANNEL_OVERLAP', fixed: false, hint: 'Interferensi Frekuensi! Pindah ke Channel 11.' },
+    server: { status: 'FAULT', type: 'DNS_DOWN', fixed: false, hint: 'DNS Server Down! Atur Primary DNS 8.8.8.8.' }
+  }
+};
+
+function showToast(msg, type = 'info') {
+  const el = document.getElementById('feedback-toast');
+  el.textContent = msg;
+  el.className = 'feedback-toast show ' + (type === 'error' ? 'error' : type === 'success' ? 'success' : '');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 3600);
+}
+
+// ==========================================
+// 5. UI & CHALLENGE CARD CONTROLLERS
+// ==========================================
+function updateInspectorPanel() {
+  const iTitle = document.getElementById('info-title');
+  const iDesc = document.getElementById('info-desc');
+  const iHint = document.getElementById('info-hint');
+  const extra = document.getElementById('inspector-extra');
+
+  if (LogicState.mission === 'build') {
+    iTitle.textContent = 'Arsitektur Jaringan Kota & Sekolah';
+    iDesc.textContent = 'Menghubungkan serat optik ISP Backbone ke Router Utama, Switch Distribusi, Server, Wi-Fi Tower, dan Komputer Lab.';
+    iHint.textContent = 'Standard: UTP Cat6 / Fiber Optic (Bandwidth 1 Gbps)';
+    extra.innerHTML = `
+      <div class="net-metrics-widget">
+        <div class="metric-row"><span>ISP Core:</span><strong>200 Mbps Fiber</strong></div>
+        <div class="metric-row"><span>Router IP:</span><strong>192.168.1.1</strong></div>
+        <div class="metric-row"><span>Switch Port:</span><strong>Gigabit 24-Port</strong></div>
+        <div class="metric-row"><span>Bandwidth Aktif:</span><strong>${Object.values(LogicState.cablesConnected).filter(Boolean).length * 20}%</strong></div>
+      </div>
+    `;
+  } else if (LogicState.mission === 'topology') {
+    iTitle.textContent = 'Topologi & Simulator Ketahanan Sinyal';
+    iDesc.textContent = 'Topologi (Star, Bus, Ring, Mesh) menentukan bagaimana jalur data mengalir dan daya tahan jika salah satu kabel terputus.';
+    iHint.textContent = 'Rumus Mesh: N × (N - 1) / 2 Jalur Kabel';
+    extra.innerHTML = `
+      <div class="net-metrics-widget">
+        <div class="metric-row"><span>Topologi Aktif:</span><strong>${LogicState.topologyType}</strong></div>
+        <div class="metric-row"><span>Single Failure:</span><strong>${LogicState.topologyType === 'STAR' ? 'Terisolasi' : LogicState.topologyType === 'BUS' ? 'Lumpuh Total' : 'Toleran'}</strong></div>
+        <div class="metric-row"><span>Redundansi Sinyal:</span><strong>${LogicState.topologyType === 'MESH' ? 'Maksimal (Full)' : 'Standar'}</strong></div>
+      </div>
+    `;
+  } else if (LogicState.mission === 'packet') {
+    iTitle.textContent = 'Traffic Controller & Firewall Switchboard';
+    iDesc.textContent = 'Paket data bergerak secara real-time! Kendalikan Switch Rute & Filter Firewall untuk mengalirkan paket sah (Hijau) dan memblokir Malware/DDoS (Merah).';
+    iHint.textContent = 'Port 80/443 (HTTP/S) = Sah | Port 6667 (Malware) = Blokir';
+    extra.innerHTML = `
+      <div class="net-metrics-widget">
+        <div class="metric-row"><span>Paket Lolos:</span><strong>${LogicState.arcadeScore} Poin</strong></div>
+        <div class="metric-row"><span>Sakelar Rute:</span><strong>${LogicState.packetSwitchState}</strong></div>
+        <div class="metric-row"><span>Status Firewall:</span><strong>${LogicState.firewallMode}</strong></div>
+      </div>
+    `;
+  } else if (LogicState.mission === 'troubleshoot') {
+    iTitle.textContent = 'Drone Diagnostic Radar & Scanner';
+    iDesc.textContent = 'Terbangkan Drone Diagnostik untuk memindai node jaringan kota yang berkedip merah/kuning, lalu gunakan alat teknis yang sesuai!';
+    iHint.textContent = 'Perkakas: DHCP Renew, Wi-Fi Channel Fix, DNS Override';
+    extra.innerHTML = `
+      <div class="net-metrics-widget">
+        <div class="metric-row"><span>Posisi Drone:</span><strong>Node ${LogicState.targetNodeId.toUpperCase()}</strong></div>
+        <div class="metric-row"><span>Node Terperbaiki:</span><strong>${Object.values(LogicState.nodeFaults).filter(n => n.fixed).length} / 3 Node</strong></div>
+      </div>
+    `;
+  }
+}
+
+function renderBottomDock() {
+  const dock = document.getElementById('node-grid-dock');
+  dock.innerHTML = '';
+
+  if (LogicState.mission === 'build') {
+    document.getElementById('dock-left-label').innerHTML = '<strong>Peta Perangkat Kota & Sekolah</strong> (Klik untuk Menghubungkan Kabel)';
+    const connectedCount = Object.values(LogicState.cablesConnected).filter(Boolean).length;
+    document.getElementById('dock-right-readout').textContent = `TERPASANG: ${connectedCount} / 5 KABEL`;
+
+    NODE_LIST.forEach(n => {
+      const isConnected = n.id === 'isp' || (
+        (n.id === 'router' && LogicState.cablesConnected.isp_router) ||
+        (n.id === 'switch' && LogicState.cablesConnected.router_switch) ||
+        (n.id === 'server' && LogicState.cablesConnected.switch_server) ||
+        (n.id === 'wifi' && LogicState.cablesConnected.switch_wifi) ||
+        (n.id === 'pc_lab' && LogicState.cablesConnected.switch_pc_lab)
+      );
+
+      const btn = document.createElement('button');
+      btn.className = 'node-card-btn' + (isConnected ? ' connected' : '');
+      btn.innerHTML = `
+        <span class="n-icon">${n.icon}</span>
+        <span class="n-name">${n.name}</span>
+        <span class="n-status">${isConnected ? 'ONLINE' : 'UNCONNECTED'}</span>
+      `;
+      btn.addEventListener('click', () => handleNodeClick(n.id));
+      dock.appendChild(btn);
+    });
+  } else if (LogicState.mission === 'troubleshoot') {
+    document.getElementById('dock-left-label').innerHTML = '<strong>Pilih Target Drone Diagnostik</strong> (Klik node untuk terbang)';
+    const fixedCount = Object.values(LogicState.nodeFaults).filter(n => n.fixed).length;
+    document.getElementById('dock-right-readout').textContent = `NODE REPAIRED: ${fixedCount} / 3`;
+
+    ['router', 'wifi', 'server'].forEach(id => {
+      const n = NODE_LIST.find(item => item.id === id);
+      const fault = LogicState.nodeFaults[id];
+      const isSelected = LogicState.targetNodeId === id;
+
+      const btn = document.createElement('button');
+      btn.className = 'node-card-btn' + (fault.fixed ? ' connected' : isSelected ? ' active-target' : '');
+      btn.innerHTML = `
+        <span class="n-icon">${n.icon}</span>
+        <span class="n-name">${n.name}</span>
+        <span class="n-status" style="color:${fault.fixed ? '#6ee7b7' : '#ef4444'}">${fault.fixed ? 'NORMAL' : 'FAULT ALERT'}</span>
+      `;
+      btn.addEventListener('click', () => {
+        LogicState.targetNodeId = id;
+        LogicState.dronePos = { x: n.pos[0], y: n.pos[1] + 1.1, z: n.pos[2] };
+        renderBottomDock();
+        renderChallengeCard();
+        updateInspectorPanel();
+      });
+      dock.appendChild(btn);
+    });
+  } else {
+    document.getElementById('dock-left-label').innerHTML = '<strong>Pusat Komando Simulasi Jaringan Universe</strong>';
+    document.getElementById('dock-right-readout').textContent = 'STATUS SIMULASI REAL-TIME';
+    dock.innerHTML = `<div style="grid-column: 1 / -1; font-size: 11px; color: #94a3b8; text-align: center; padding: 4px;">Gunakan panel aksi interaktif di sebelah kanan ➔</div>`;
+  }
+}
+
+function handleNodeClick(nodeId) {
+  if (LogicState.mission !== 'build') return;
+
+  const steps = [
+    { key: 'isp_router', from: 'isp', to: 'router', name: 'ISP ➔ Core Router' },
+    { key: 'router_switch', from: 'router', to: 'switch', name: 'Router ➔ Core Switch' },
+    { key: 'switch_server', from: 'switch', to: 'server', name: 'Switch ➔ Server Sekolah' },
+    { key: 'switch_wifi', from: 'switch', to: 'wifi', name: 'Switch ➔ Wi-Fi Tower' },
+    { key: 'switch_pc_lab', from: 'switch', to: 'pc_lab', name: 'Switch ➔ Komputer Lab' }
+  ];
+
+  const currentStep = steps[LogicState.stepIdx];
+  if (!currentStep) return;
+
+  if (nodeId === currentStep.from || nodeId === currentStep.to) {
+    LogicState.cablesConnected[currentStep.key] = true;
+    showToast(`✓ Kabel Fiber/UTP ${currentStep.name} Terpasang Sempurna!`, 'success');
+
+    if (LogicState.stepIdx < steps.length - 1) {
+      LogicState.stepIdx++;
+      renderBottomDock();
+      renderChallengeCard();
+      updateInspectorPanel();
+    } else {
+      renderBottomDock();
+      renderChallengeCard();
+      finishMission('build', 'Jaringan Kota & Sekolah Terhubung Total!', 'Seluruh gedung sekolah dan infrastruktur ISP telah terhubung dengan bandwidth Gigabit!', 'City Network Architect');
+    }
+  } else {
+    showToast(`✗ Jalur kabel belum sesuai! Hubungkan node ${currentStep.from.toUpperCase()} dan ${currentStep.to.toUpperCase()}`, 'error');
+  }
+}
+
+function renderChallengeCard() {
+  const area = document.getElementById('ch-dynamic-area');
+  area.innerHTML = '';
+
+  if (LogicState.mission === 'build') {
+    const steps = [
+      { name: '1. Pasang Kabel Fiber Optik ISP ➔ Router Utama', desc: 'Klik node ISP Core di kota atau Router Utama untuk mengalirkan internet backbone!' },
+      { name: '2. Hubungkan Router ➔ Core Switch Sekolah', desc: 'Sambungkan port LAN Router ke Core Switch distribusi sekolah!' },
+      { name: '3. Hubungkan Core Switch ➔ Server Data Sekolah', desc: 'Hubungkan kabel Gigabit ke Server Web Pembelajaran!' },
+      { name: '4. Hubungkan Core Switch ➔ Access Point Wi-Fi', desc: 'Aktifkan pemancar sinyal nirkabel sekolah!' },
+      { name: '5. Hubungkan Core Switch ➔ Lab Komputer Siswa', desc: 'Tancapkan UTP RJ-45 ke lab Komputer Informatika!' }
+    ];
+
+    const cur = steps[LogicState.stepIdx] || steps[steps.length - 1];
+    document.getElementById('ch-badge').textContent = `Misi 1 • Langkah ${LogicState.stepIdx + 1} / 5`;
+    document.getElementById('ch-dir-pill').textContent = 'CITY ARCHITECT';
+    document.getElementById('ch-title').textContent = cur.name;
+    document.getElementById('ch-desc').textContent = cur.desc;
+
+    const count = Object.values(LogicState.cablesConnected).filter(Boolean).length;
+    area.innerHTML = `
+      <div class="target-display">
+        <small>Target Pemasangan Kabel</small>
+        <strong>${count} / 5 Jalur Terhubung (${count * 20}% Bandwidth)</strong>
+      </div>
+      <button class="action-submit-btn" id="btn-auto-connect-step">Tancapkan Kabel Otomatis 🔌</button>
+    `;
+
+    document.getElementById('btn-auto-connect-step').addEventListener('click', () => {
+      const stepKeys = ['router', 'switch', 'server', 'wifi', 'pc_lab'];
+      handleNodeClick(stepKeys[LogicState.stepIdx]);
+    });
+
+  } else if (LogicState.mission === 'topology') {
+    document.getElementById('ch-badge').textContent = `Misi 2 • Simulator Topologi`;
+    document.getElementById('ch-dir-pill').textContent = 'STRESS-TEST';
+    document.getElementById('ch-title').textContent = 'Uji Ketahanan & Redundansi Topologi';
+    document.getElementById('ch-desc').textContent = 'Pilih bentuk topologi jaringan, lalu simulasikan Uji Pemutusan Kabel (Stress Test) untuk melihat dampaknya pada sinyal!';
+
+    area.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <button class="action-submit-btn ${LogicState.topologyType === 'STAR' ? '' : 'btn-warning-action'}" id="btn-top-star">Bintang (STAR)</button>
+        <button class="action-submit-btn ${LogicState.topologyType === 'BUS' ? '' : 'btn-warning-action'}" id="btn-top-bus">Kabel (BUS)</button>
+        <button class="action-submit-btn ${LogicState.topologyType === 'RING' ? '' : 'btn-warning-action'}" id="btn-top-ring">Cincin (RING)</button>
+        <button class="action-submit-btn ${LogicState.topologyType === 'MESH' ? '' : 'btn-warning-action'}" id="btn-top-mesh">Jala (MESH)</button>
+      </div>
+      <div class="target-display">
+        <small>Mode Topologi Aktif</small>
+        <strong>Topologi ${LogicState.topologyType}</strong>
+      </div>
+      <div class="btn-grid-dual">
+        <button class="btn-danger-action" id="btn-cut-cable">💥 Uji Putus 1 Kabel</button>
+        <button class="action-submit-btn" id="btn-pass-topology">Selesaikan Misi ➔</button>
+      </div>
+    `;
+
+    const setTopo = (type) => {
+      LogicState.topologyType = type;
+      showToast(`📍 Topologi diubah ke mode ${type}!`, 'info');
+      renderChallengeCard();
+      updateInspectorPanel();
+    };
+
+    document.getElementById('btn-top-star').addEventListener('click', () => setTopo('STAR'));
+    document.getElementById('btn-top-bus').addEventListener('click', () => setTopo('BUS'));
+    document.getElementById('btn-top-ring').addEventListener('click', () => setTopo('RING'));
+    document.getElementById('btn-top-mesh').addEventListener('click', () => setTopo('MESH'));
+
+    document.getElementById('btn-cut-cable').addEventListener('click', () => {
+      if (LogicState.topologyType === 'BUS') {
+        showToast('💥 KABEL BACKBONE BUS PUTUS! Seluruh sinyal jaringan lumpuh total!', 'error');
+      } else if (LogicState.topologyType === 'STAR') {
+        showToast('⚠️ 1 Kabel client putus, namun node lain tetap terhubung via Switch pusat!', 'success');
+      } else if (LogicState.topologyType === 'RING') {
+        showToast('⚠️ Sinyal cincin terputus, token passing terhenti!', 'error');
+      } else if (LogicState.topologyType === 'MESH') {
+        showToast('🛡️ MESH SURVIVED! Sinyal otomatis membalas lewat rute alternatif cadangan!', 'success');
+      }
+    });
+
+    document.getElementById('btn-pass-topology').addEventListener('click', () => {
+      finishMission('topology', 'Uji Stress Test Topologi Selesai!', 'Kamu memahami perbedaan ketahanan sinyal antara topologi Star, Bus, Ring, dan Full Mesh!', 'Topology Engineer');
+    });
+
+  } else if (LogicState.mission === 'packet') {
+    document.getElementById('ch-badge').textContent = `Misi 3 • Traffic Arcade`;
+    document.getElementById('ch-dir-pill').textContent = 'PACKET ROUTING';
+    document.getElementById('ch-title').textContent = 'Real-Time Firewall & Packet Switch';
+    document.getElementById('ch-desc').textContent = 'Kendalikan sakelar pengarah rute dan tombol filter firewall untuk menyalurkan paket HTTP/DNS sah dan memblokir DDoS/Malware!';
+
+    area.innerHTML = `
+      <div class="target-display">
+        <small>Skor Lalu Lintas Data</small>
+        <strong>${LogicState.arcadeScore} Paket Berhasil Diproses</strong>
+      </div>
+      <div class="btn-grid-dual">
+        <button class="action-submit-btn" id="btn-toggle-switch">🔀 Switch: ${LogicState.packetSwitchState}</button>
+        <button class="btn-danger-action" id="btn-toggle-firewall">🛡️ Firewall: ${LogicState.firewallMode}</button>
+      </div>
+      <button class="action-submit-btn" id="btn-pass-packet" style="margin-top:4px;">Klaim Kemenangan Arcade 🏆</button>
+    `;
+
+    document.getElementById('btn-toggle-switch').addEventListener('click', () => {
+      LogicState.packetSwitchState = LogicState.packetSwitchState === 'PATH_A' ? 'PATH_B' : 'PATH_A';
+      showToast(`🔀 Sakelar Rute Diubah ke ${LogicState.packetSwitchState}`, 'info');
+      renderChallengeCard();
+      updateInspectorPanel();
+    });
+
+    document.getElementById('btn-toggle-firewall').addEventListener('click', () => {
+      LogicState.firewallMode = LogicState.firewallMode === 'ALLOW_ALL' ? 'BLOCK_BAD' : 'ALLOW_ALL';
+      showToast(`🛡️ Mode Firewall: ${LogicState.firewallMode === 'BLOCK_BAD' ? 'AKTIF (MEMBLOKIR MALWARE)' : 'NONAKTIF'}`, 'info');
+      renderChallengeCard();
+      updateInspectorPanel();
+    });
+
+    document.getElementById('btn-pass-packet').addEventListener('click', () => {
+      if (LogicState.arcadeScore >= 5 || LogicState.firewallMode === 'BLOCK_BAD') {
+        finishMission('packet', 'Packet Routing Arcade Selesai!', 'Kamu berhasil mengendalikan lalu lintas paket data dan menyaring ancaman siber dengan Firewall!', 'Traffic Controller');
+      } else {
+        showToast('⚠️ Aktifkan sakelar Firewall ke BLOCK_BAD dan proses paket data terlebih dahulu!', 'error');
+      }
+    });
+
+  } else if (LogicState.mission === 'troubleshoot') {
+    const targetId = LogicState.targetNodeId;
+    const fault = LogicState.nodeFaults[targetId];
+    const nodeObj = NODE_LIST.find(n => n.id === targetId);
+
+    document.getElementById('ch-badge').textContent = `Misi 4 • Drone Diagnostic`;
+    document.getElementById('ch-dir-pill').textContent = 'RADAR REPAIR';
+    document.getElementById('ch-title').textContent = `Inspeksi Node: ${nodeObj.name}`;
+    document.getElementById('ch-desc').textContent = fault.fixed ? 'Node ini dalam kondisi normal (Operational).' : fault.hint;
+
+    area.innerHTML = `
+      <div class="target-display">
+        <small>Hasil Pemindaian Drone</small>
+        <strong style="color:${fault.fixed ? '#10b981' : '#ef4444'}">${fault.fixed ? 'STATUS: REPAIRED (ONLINE)' : 'ALARM: ' + fault.type}</strong>
+      </div>
+      ${!fault.fixed ? `
+        <button class="action-submit-btn" id="btn-fix-node">🔧 Terapkan Solusi Teknisi (${fault.type})</button>
+      ` : `
+        <div style="font-size:11px;color:#10b981;text-align:center;margin-bottom:8px;">✓ Node ini telah pulih 100%!</div>
+      `}
+      <button class="action-submit-btn" id="btn-finish-trouble" style="margin-top:6px;">Selesaikan Pemulihan Jaringan Kota ➔</button>
+    `;
+
+    if (!fault.fixed) {
+      document.getElementById('btn-fix-node').addEventListener('click', () => {
+        fault.fixed = true;
+        showToast(`✓ Berhasil memulihkan node ${nodeObj.name}! Status kembali NORMAL.`, 'success');
+        renderBottomDock();
+        renderChallengeCard();
+        updateInspectorPanel();
+      });
+    }
+
+    document.getElementById('btn-finish-trouble').addEventListener('click', () => {
+      const allFixed = Object.values(LogicState.nodeFaults).every(n => n.fixed);
+      if (allFixed) {
+        finishMission('troubleshoot', 'Seluruh Gangguan Jaringan Pulih!', 'Selamat! Kamu telah memimpin pemulihan jaringan siber kota dan sekolah hingga 100% online!', 'Master Network Commander');
+      } else {
+        showToast('⚠️ Masih ada node bermasalah! Pindahkan Drone dan perbaiki seluruh 3 node.', 'error');
+      }
+    });
+  }
+}
+
+function finishMission(missionKey, heading, subText, badgeName) {
+  const total = Math.max(75, 100 - LogicState.mistakes * 5);
+  const xpGain = 200 + total;
+  SaveManager.addReward(missionKey, xpGain, 70, total, badgeName);
+
+  document.getElementById('res-heading').textContent = '🎉 ' + heading;
+  document.getElementById('res-sub').textContent = subText;
+  document.getElementById('res-grid').innerHTML = `
+    <div class="score-item"><label>Efisiensi Jaringan</label><strong>${total} / 100</strong></div>
+    <div class="score-item"><label>Evaluasi Teratasi</label><strong>100% OK</strong></div>
+  `;
+  document.getElementById('res-total').textContent = `${total} / 100 (+${xpGain} XP)`;
+  document.getElementById('res-badge').textContent = `🏅 Badge Terbuka: ${badgeName}`;
+  document.getElementById('modal-result').classList.add('open');
+}
+
+function switchMission(mode) {
+  LogicState.mission = mode;
+  LogicState.stepIdx = 0;
+  LogicState.mistakes = 0;
+  document.getElementById('modal-result').classList.remove('open');
+
+  document.querySelectorAll('.mission-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mission === mode);
+  });
+
+  const sub = document.getElementById('active-mission-subtitle');
+  if (mode === 'build') sub.textContent = 'Misi 1: City Fiber & LAN Architect';
+  else if (mode === 'topology') sub.textContent = 'Misi 2: Network Topology Stress-Test';
+  else if (mode === 'packet') sub.textContent = 'Misi 3: Packet Traffic Arcade & Firewall';
+  else if (mode === 'troubleshoot') sub.textContent = 'Misi 4: Drone Diagnostic & Radar Repair';
+
+  updateInspectorPanel();
+  renderBottomDock();
+  renderChallengeCard();
+}
+
+// ==========================================
+// 6. POINTER INTERACTION (DRAG & ZOOM)
+// ==========================================
+const activePointers = new Map();
+let lastPinchDist = 0;
+let camDragStart = null;
+
+window.addEventListener('pointermove', (e) => {
+  if (activePointers.has(e.pointerId)) {
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+  if (activePointers.size === 2) {
+    const pts = Array.from(activePointers.values());
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    if (lastPinchDist > 0) {
+      Camera.zoom = Math.max(0.55, Math.min(2.1, Camera.zoom + (dist - lastPinchDist) * 0.004));
+    }
+    lastPinchDist = dist;
+  } else if (activePointers.size === 1 && camDragStart) {
+    const dx = e.clientX - camDragStart.x;
+    const dy = e.clientY - camDragStart.y;
+    Camera.yaw = Math.max(-0.5, Math.min(0.9, camDragStart.yaw - dx * 0.006));
+    Camera.pitch = Math.max(0.22, Math.min(0.88, camDragStart.pitch + dy * 0.005));
+  }
+});
+
+window.addEventListener('pointerup', (e) => {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) lastPinchDist = 0;
+  if (activePointers.size === 0) camDragStart = null;
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size === 1) {
+    camDragStart = { x: e.clientX, y: e.clientY, yaw: Camera.yaw, pitch: Camera.pitch };
+  }
+});
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  Camera.zoom = Math.max(0.55, Math.min(2.1, Camera.zoom - e.deltaY * 0.001));
+}, { passive: false });
+
+// UI Wire Button Listeners
+document.querySelectorAll('.mission-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchMission(btn.dataset.mission));
+});
+document.getElementById('btn-cam-reset').addEventListener('click', () => Camera.reset());
+document.getElementById('btn-reset-zone').addEventListener('click', () => switchMission(LogicState.mission));
+document.getElementById('inspector-toggle').addEventListener('click', () => {
+  const panel = document.getElementById('inspector-panel');
+  panel.classList.toggle('collapsed');
+  document.getElementById('inspector-toggle-icon').textContent = panel.classList.contains('collapsed') ? '▶' : '▼';
+});
+document.getElementById('btn-world').addEventListener('click', () => document.getElementById('modal-world').classList.add('open'));
+document.getElementById('btn-close-world').addEventListener('click', () => document.getElementById('modal-world').classList.remove('open'));
+document.getElementById('btn-close-result').addEventListener('click', () => document.getElementById('modal-result').classList.remove('open'));
+document.getElementById('btn-next-mission').addEventListener('click', () => {
+  document.getElementById('modal-result').classList.remove('open');
+  if (LogicState.mission === 'build') switchMission('topology');
+  else if (LogicState.mission === 'topology') switchMission('packet');
+  else if (LogicState.mission === 'packet') switchMission('troubleshoot');
+  else switchMission('build');
+});
+
+// ==========================================
+// 7. MAIN 3D ISOMETRIC RENDER LOOP
+// ==========================================
+function render() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const w = Math.floor(window.innerWidth * dpr);
+  const h = Math.floor(window.innerHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Background Cyber Space Gradient
+  const bgGrad = ctx.createRadialGradient(
+    window.innerWidth * 0.5, window.innerHeight * 0.45, 50,
+    window.innerWidth * 0.5, window.innerHeight * 0.5, window.innerWidth * 0.75
+  );
+  bgGrad.addColorStop(0, '#091326');
+  bgGrad.addColorStop(1, '#030712');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+  // Grid Lines
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx < window.innerWidth; gx += 48) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, window.innerHeight); ctx.stroke();
+  }
+  for (let gy = 0; gy < window.innerHeight; gy += 48) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(window.innerWidth, gy); ctx.stroke();
+  }
+
+  // 1. ISOMETRIC CITY BASE PLATFORM (FIXED Z-SORTING PLATFORM BASE)
+  queueBox(0, -0.20, 0, 5.5, 0.22, 4.2, '#0c162c', { isPlatform: true });
+  queueBox(0, -0.06, 0, 5.3, 0.04, 4.0, '#0284c7', { isPlatform: true });
+
+  // 2. RENDER COMPOSITE 3D NETWORK DEVICES
+  NODE_LIST.forEach(n => {
+    let baseHex = n.color;
+    const fault = LogicState.nodeFaults[n.id];
+    if (LogicState.mission === 'troubleshoot' && fault && !fault.fixed) {
+      const flash = (Math.floor(Date.now() / 300) % 2 === 0);
+      baseHex = flash ? '#ef4444' : '#f59e0b';
+    }
+
+    if (n.type === 'isp') drawISPCloudGateway(n.pos[0], n.pos[1], n.pos[2], baseHex);
+    else if (n.type === 'router') drawEnterpriseRouter(n.pos[0], n.pos[1], n.pos[2], baseHex);
+    else if (n.type === 'switch') drawCoreSwitch(n.pos[0], n.pos[1], n.pos[2], baseHex);
+    else if (n.type === 'wifi') drawWiFiTower(n.pos[0], n.pos[1], n.pos[2], baseHex);
+    else if (n.type === 'server') drawServerRack(n.pos[0], n.pos[1], n.pos[2], baseHex);
+    else if (n.type === 'pc') drawPCLabWorkstation(n.pos[0], n.pos[1], n.pos[2], baseHex);
+  });
+
+  // 3. RENDER DYNAMIC CABLE CONNECTIONS
+  if (LogicState.mission === 'build') {
+    const c = LogicState.cablesConnected;
+    if (c.isp_router) queueCable(NODE_LIST[0].pos, NODE_LIST[1].pos, 4.5, '#38bdf8', true);
+    if (c.router_switch) queueCable(NODE_LIST[1].pos, NODE_LIST[2].pos, 4.5, '#38bdf8', true);
+    if (c.switch_server) queueCable(NODE_LIST[2].pos, NODE_LIST[3].pos, 4.5, '#a855f7', true);
+    if (c.switch_wifi) queueCable(NODE_LIST[2].pos, NODE_LIST[4].pos, 4.5, '#f59e0b', true);
+    if (c.switch_pc_lab) queueCable(NODE_LIST[2].pos, NODE_LIST[5].pos, 4.5, '#10b981', true);
+  } else if (LogicState.mission === 'topology') {
+    const p = NODE_LIST.map(n => n.pos);
+    if (LogicState.topologyType === 'STAR') {
+      for (let i = 0; i < p.length; i++) {
+        if (i !== 2) queueCable(p[2], p[i], 4, '#38bdf8', true);
+      }
+    } else if (LogicState.topologyType === 'BUS') {
+      for (let i = 0; i < p.length - 1; i++) {
+        queueCable(p[i], p[i + 1], 4, '#f59e0b', false);
+      }
+    } else if (LogicState.topologyType === 'RING') {
+      for (let i = 0; i < p.length; i++) {
+        queueCable(p[i], p[(i + 1) % p.length], 4, '#a855f7', true);
+      }
+    } else if (LogicState.topologyType === 'MESH') {
+      for (let i = 0; i < p.length; i++) {
+        for (let j = i + 1; j < p.length; j++) {
+          queueCable(p[i], p[j], 3, '#10b981', true);
+        }
+      }
+    }
+  } else if (LogicState.mission === 'packet') {
+    queueCable(NODE_LIST[5].pos, NODE_LIST[2].pos, 5, '#38bdf8', true);
+    queueCable(NODE_LIST[2].pos, NODE_LIST[1].pos, 5, '#10b981', true);
+    queueCable(NODE_LIST[1].pos, NODE_LIST[3].pos, 5, LogicState.packetSwitchState === 'PATH_A' ? '#a855f7' : '#475569', true);
+    queueCable(NODE_LIST[1].pos, NODE_LIST[0].pos, 5, LogicState.packetSwitchState === 'PATH_B' ? '#ef4444' : '#475569', true);
+  }
+
+  // 4. PACKET ARCADE PARTICLES
+  if (LogicState.mission === 'packet') {
+    const t = (Date.now() % 1500) / 1500;
+    const p1 = transformPoint(NODE_LIST[5].pos[0], NODE_LIST[5].pos[1] + 0.3, NODE_LIST[5].pos[2]);
+    const p2 = transformPoint(NODE_LIST[1].pos[0], NODE_LIST[1].pos[1] + 0.3, NODE_LIST[1].pos[2]);
+    const px = p1.sx + (p2.sx - p1.sx) * t;
+    const py = p1.sy + (p2.sy - p1.sy) * t;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px, py, 9 * Camera.zoom, 0, Math.PI * 2);
+    ctx.fillStyle = LogicState.firewallMode === 'BLOCK_BAD' ? '#10b981' : '#38bdf8';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    if (t > 0.95 && Math.random() < 0.05) {
+      LogicState.arcadeScore++;
+    }
+  }
+
+  // 5. DIAGNOSTIC DRONE IN MISSION 4
+  if (LogicState.mission === 'troubleshoot') {
+    const dPos = LogicState.dronePos;
+    const dp = transformPoint(dPos.x, dPos.y, dPos.z);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(dp.sx, dp.sy, 15 * Camera.zoom, 0, Math.PI * 2);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('DRONE', dp.sx, dp.sy + 3.5);
+    ctx.restore();
+  }
+
+  flushRenderQueue();
+
+  // 6. FINAL OVERLAY PASS: HIGH-RES DEVICE ICON & NON-OVERLAPPING BADGES
+  ctx.save();
+  NODE_LIST.forEach(n => {
+    let topY = 0.80;
+    if (n.type === 'wifi') topY = 1.35;
+    if (n.type === 'server') topY = 1.15;
+    if (n.type === 'isp') topY = 1.05;
+
+    const pt = transformPoint(n.pos[0], n.pos[1] + topY, n.pos[2]);
+
+    // Icon Circle Halo
+    ctx.beginPath();
+    ctx.arc(pt.sx, pt.sy - 16, 18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+    ctx.fill();
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Large HD Device Emoji Icon
+    ctx.font = 'bold 19px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.icon, pt.sx, pt.sy - 15);
+
+    // Label Text Badge Box
+    ctx.font = 'bold 11px monospace';
+    const textWidth = ctx.measureText(n.name).width;
+    const bx = pt.sx - textWidth / 2 - 6;
+    const by = pt.sy + 4;
+
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.92)';
+    ctx.fillRect(bx, by, textWidth + 12, 18);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, textWidth + 12, 18);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(n.name, pt.sx, by + 13);
+  });
+  ctx.restore();
+
+  requestAnimationFrame(render);
+}
+
+// Init Application
+SaveManager.load();
+switchMission('build');
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

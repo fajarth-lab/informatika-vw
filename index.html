@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Informatika Virtual World — Portal Kurikulum SMP</title>
+<style>
+  :root {
+    --bg-dark: #060913;
+    --panel-bg: rgba(15, 23, 42, 0.88);
+    --panel-border: rgba(56, 189, 248, 0.35);
+    --accent: #38bdf8;
+    --purple: #a855f7;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --font-ui: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-ui);
+  }
+
+  body {
+    background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #090d1a 55%, #04070f 100%);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated Cyber Grid Background */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(168, 85, 247, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Top Hero Header */
+  .hero-header {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 22px 26px;
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+  }
+
+  .brand-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-orb {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0284c7, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+    flex-shrink: 0;
+  }
+
+  .brand-text .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 6px;
+  }
+
+  .brand-text h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Player Stats Dashboard */
+  .stats-dashboard {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+    padding: 10px 14px;
+    min-width: 96px;
+    text-align: center;
+  }
+
+  .stat-card .lbl {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-card .num {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 800;
+    color: #38bdf8;
+    margin-top: 2px;
+  }
+
+  .stat-card.gold .num { color: #fbbf24; }
+  .stat-card.purple .num { color: #c084fc; }
+
+  .xp-bar-container {
+    width: 100%;
+    height: 5px;
+    background: #0f172a;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #a855f7, #38bdf8);
+    transition: width 0.5s ease;
+  }
+
+  .utility-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .util-btn {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #e2e8f0;
+    padding: 10px 13px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .util-btn:hover {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.18);
+    color: #fff;
+  }
+
+  .util-btn.danger:hover {
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+  }
+
+  /* Overall Progress Banner */
+  .overall-bar-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .overall-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e9d5ff;
+  }
+
+  .overall-track {
+    flex: 1;
+    min-width: 220px;
+    height: 10px;
+    background: #090d1a;
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .overall-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #10b981, #38bdf8, #a855f7);
+    transition: width 0.5s ease;
+  }
+
+  /* 6 Zones Grid */
+  .zones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 18px;
+  }
+
+  .zone-card {
+    background: var(--panel-bg);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .zone-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 14px 32px rgba(2, 132, 199, 0.25);
+  }
+
+  .zone-card.completed-zone {
+    border-color: rgba(16, 185, 129, 0.55);
+  }
+
+  .zone-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .zone-pill {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .z1-theme .zone-pill { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(14, 165, 233, 0.45); }
+  .z2-theme .zone-pill { background: rgba(168, 85, 247, 0.2); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.45); }
+  .z3-theme .zone-pill { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45); }
+  .z4-theme .zone-pill { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.45); }
+  .z5-theme .zone-pill { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.45); }
+  .z6-theme .zone-pill { background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.45); }
+
+  .zone-icon {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .zone-card h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .zone-card p {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .mission-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 16px;
+  }
+
+  .m-tag {
+    font-size: 11px;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .m-tag.done {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+    font-weight: 700;
+  }
+
+  .zone-footer {
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+    padding-top: 12px;
+  }
+
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .progress-row .status-lbl { color: #94a3b8; }
+  .progress-row .status-lbl.done { color: #10b981; }
+  .progress-row .score-lbl { font-family: var(--font-mono); color: #38bdf8; }
+
+  .enter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    text-decoration: none;
+    background: linear-gradient(135deg, #0284c7, #7c3aed);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13.5px;
+    padding: 11px 14px;
+    border-radius: 11px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .enter-btn:hover { opacity: 0.92; }
+  .enter-btn:active { transform: scale(0.98); }
+
+  .zone-card.completed-zone .enter-btn {
+    background: linear-gradient(135deg, #059669, #0284c7);
+  }
+
+  /* Modal Badges */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .modal-card {
+    background: #0f172a;
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    max-width: 500px;
+    width: 100%;
+    padding: 22px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal-card h3 {
+    font-size: 18px;
+    color: #38bdf8;
+    margin-bottom: 6px;
+  }
+
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .badge-item {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+
+  .badge-item .b-ico { font-size: 26px; display: block; margin-bottom: 5px; }
+  .badge-item .b-name { font-size: 12px; font-weight: 700; color: #f3e8ff; }
+
+  .close-modal-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #7c3aed, #0284c7);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13.5px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  @media (max-width: 640px) {
+    .hero-header { padding: 16px; }
+    .brand-text h1 { font-size: 19px; }
+    .zones-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="container">
+  <!-- HERO HEADER -->
+  <header class="hero-header">
+    <div class="brand-area">
+      <div class="logo-orb">🌐</div>
+      <div class="brand-text">
+        <span class="tag">Media Pembelajaran Interaktif 3D • SMP</span>
+        <h1>Informatika Virtual World</h1>
+        <p>Jelajahi 6 Zona Kurikulum Informatika, selesaikan misi interaktif, dan kumpulkan seluruh lencana keahlian!</p>
+      </div>
+    </div>
+
+    <div class="stats-dashboard">
+      <div class="stat-card">
+        <span class="lbl">Level</span>
+        <span class="num" id="stat-level">1</span>
+        <div class="xp-bar-container"><div class="xp-bar-fill" id="stat-xp-bar"></div></div>
+      </div>
+      <div class="stat-card">
+        <span class="lbl">Total XP</span>
+        <span class="num" id="stat-xp">0</span>
+      </div>
+      <div class="stat-card gold">
+        <span class="lbl">Koin</span>
+        <span class="num" id="stat-coins">0</span>
+      </div>
+      <div class="stat-card purple">
+        <span class="lbl">Badge</span>
+        <span class="num" id="stat-badges">0</span>
+      </div>
+
+      <div class="utility-actions">
+        <button class="util-btn" id="btn-show-badges" title="Lihat Koleksi Lencana">🏅 Lencana</button>
+        <button class="util-btn danger" id="btn-reset-all" title="Reset Semua Progres Siswa">🗑️ Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- OVERALL CURRICULUM PROGRESS -->
+  <div class="overall-bar-card">
+    <div class="overall-text" id="overall-progress-text">Progres Kurikulum Keseluruhan: 0 / 22 Misi Selesai (0%)</div>
+    <div class="overall-track">
+      <div class="overall-fill" id="overall-progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- 6 ZONES GRID -->
+  <main class="zones-grid" id="zones-grid"></main>
+
+  <footer>
+    Informatika Virtual World • Terintegrasi LocalStorage (<code>ivw_progress_v2</code>) • Siap Publish Google Sites
+  </footer>
+</div>
+
+<!-- MODAL KOLEKSI BADGE -->
+<div class="modal-backdrop" id="modal-badges">
+  <div class="modal-card">
+    <h3>🏅 Koleksi Lencana Keahlian (Badges)</h3>
+    <p style="font-size:12.5px;color:#cbd5e1;">Lencana yang berhasil kamu buka dari seluruh zona pembelajaran:</p>
+    <div class="badge-grid" id="badge-list-container"></div>
+    <button class="close-modal-btn" id="btn-close-badges">Tutup</button>
+  </div>
+</div>
+
+<script>
+const ZONES_CONFIG = [
+  {
+    key: 'zone_01',
+    number: 'Zona 01',
+    theme: 'z1-theme',
+    icon: '🖥️',
+    title: 'Computer Engineering Zone',
+    desc: 'Simulasi laboratorium perakitan PC 3D, pengenalan fungsi komponen keras (CPU, RAM, Motherboard, GPU), dan diagnosa kerusakan komputer.',
+    file: 'zona-01-computer-engineering.html',
+    missions: [
+      { id: 'assembly', label: 'Build Your First PC' },
+      { id: 'quiz', label: 'Hardware Identification' },
+      { id: 'troubleshoot', label: 'PC Doctor' }
+    ]
+  },
+  {
+    key: 'zone_02',
+    number: 'Zona 02',
+    theme: 'z2-theme',
+    icon: '⚡',
+    title: 'Digital Logic World',
+    desc: 'Eksplorasi meja rangkaian sakelar 8-bit, konversi dua arah Biner–Oktal–Desimal–Heksa, serta simulasi 7 gerbang logika dasar dengan tabel kebenaran.',
+    file: 'zona-02-digital-logic.html',
+    missions: [
+      { id: 'binary', label: 'Biner ↔ Desimal' },
+      { id: 'radix', label: 'Konversi 2-Arah' },
+      { id: 'gates', label: '7 Gerbang Logika' }
+    ]
+  },
+  {
+    key: 'zone_03',
+    number: 'Zona 03',
+    theme: 'z3-theme',
+    icon: '🛡️',
+    title: 'Cyber Security Center',
+    desc: 'Benteng keamanan siber untuk melatih pembuatan kata sandi kuat, mendeteksi pesan phishing, mengelola jejak digital, dan melindungi privasi data.',
+    file: 'zona-03-cyber-security.html',
+    missions: [
+      { id: 'password', label: 'Password Defender' },
+      { id: 'phishing', label: 'Phishing Detective' },
+      { id: 'footprint', label: 'Digital Footprint' },
+      { id: 'privacy', label: 'Privacy Protection' }
+    ]
+  },
+  {
+    key: 'zone_04',
+    number: 'Zona 04',
+    theme: 'z4-theme',
+    icon: '📡',
+    title: 'Network Universe',
+    desc: 'Arsitektur jaringan komputer kota 3D: menghubungkan ISP, Router, Switch, Server, uji ketahanan topologi, simulasi paket data, dan diagnosa drone.',
+    file: 'zona-04-network-universe.html',
+    missions: [
+      { id: 'cabling', label: 'Build Your Network' },
+      { id: 'topology', label: 'Topology Stress-Test' },
+      { id: 'packets', label: 'Data Packet Journey' },
+      { id: 'troubleshoot', label: 'Drone Diagnostic' }
+    ]
+  },
+  {
+    key: 'zone_05',
+    number: 'Zona 05',
+    theme: 'z5-theme',
+    icon: '🔍',
+    title: 'Digital Information City',
+    desc: 'Ruang kendali literasi digital: pencarian presisi Boolean, pemindai kredibilitas situs web, penembak klaim hoaks, dan studio jurnalisme digital.',
+    file: 'zona-05-digital-info-city.html',
+    missions: [
+      { id: 'search', label: 'Search Explorer' },
+      { id: 'detective', label: 'Info Detective' },
+      { id: 'hoax', label: 'Hoax Hunter' },
+      { id: 'journalism', label: 'Digital Journalism' }
+    ]
+  },
+  {
+    key: 'zone_06',
+    number: 'Zona 06',
+    theme: 'z6-theme',
+    icon: '🤖',
+    title: 'Algorithm & Coding Lab',
+    desc: 'Arena pemrograman robot AI, penyusunan diagram alir (Flowchart) standar, tantangan koding logika & perulangan, serta perburuan bug kode.',
+    file: 'zona-06-algorithm-coding.html',
+    missions: [
+      { id: 'algorithm', label: 'Algorithm Builder' },
+      { id: 'flowchart', label: 'Flowchart Puzzle' },
+      { id: 'coding', label: 'Coding Challenge' },
+      { id: 'debugging', label: 'Debugging Mission' }
+    ]
+  }
+];
+
+const SAVE_KEY = 'ivw_progress_v2';
+
+function loadProgressData() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { xp: 0, level: 1, coins: 0, badges: [], zones: {} };
+}
+
+function renderPortal() {
+  const data = loadProgressData();
+  const xp = data.xp || 0;
+  const level = data.level || (Math.floor(xp / 250) + 1);
+  const coins = data.coins || 0;
+  const badges = Array.isArray(data.badges) ? data.badges : [];
+  const zonesProgress = data.zones || {};
+
+  document.getElementById('stat-level').textContent = level;
+  document.getElementById('stat-xp').textContent = xp;
+  document.getElementById('stat-coins').textContent = coins;
+  document.getElementById('stat-badges').textContent = badges.length;
+  document.getElementById('stat-xp-bar').style.width = ((xp % 250) / 250 * 100) + '%';
+
+  let totalMissionsAll = 0;
+  let totalCompletedAll = 0;
+
+  const grid = document.getElementById('zones-grid');
+  grid.innerHTML = '';
+
+  ZONES_CONFIG.forEach(zone => {
+    const zState = zonesProgress[zone.key] || {};
+    let doneCount = 0;
+    let scoreSum = 0;
+
+    const tagsHTML = zone.missions.map(m => {
+      totalMissionsAll++;
+      const mData = zState[m.id];
+      const isDone = !!(mData && mData.completed);
+      if (isDone) {
+        doneCount++;
+        totalCompletedAll++;
+        scoreSum += (mData.bestScore || 100);
+      }
+      return `<span class="m-tag ${isDone ? 'done' : ''}">${isDone ? '✓ ' : ''}${m.label}</span>`;
+    }).join('');
+
+    const isZoneComplete = doneCount === zone.missions.length;
+    const avgScore = doneCount > 0 ? Math.round(scoreSum / doneCount) : 0;
+
+    const card = document.createElement('article');
+    card.className = `zone-card ${zone.theme} ${isZoneComplete ? 'completed-zone' : ''}`;
+    card.innerHTML = `
+      <div>
+        <div class="zone-top">
+          <span class="zone-pill">${zone.number}</span>
+          <span class="zone-icon">${zone.icon}</span>
+        </div>
+        <h2>${zone.title}</h2>
+        <p>${zone.desc}</p>
+        <div class="mission-tags">${tagsHTML}</div>
+      </div>
+
+      <div class="zone-footer">
+        <div class="progress-row">
+          <span class="status-lbl ${isZoneComplete ? 'done' : ''}">
+            ${isZoneComplete ? '★ Zona Selesai (' + doneCount + '/' + zone.missions.length + ')' : 'Progres: ' + doneCount + ' / ' + zone.missions.length + ' Misi'}
+          </span>
+          <span class="score-lbl">${doneCount > 0 ? 'Rata-rata: ' + avgScore : 'Siap Dimainkan'}</span>
+        </div>
+        <a href="${zone.file}" class="enter-btn">
+          ${isZoneComplete ? 'Mainkan Ulang ' + zone.number + ' ↻' : 'Masuk ' + zone.number + ' ➔'}
+        </a>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const pct = totalMissionsAll > 0 ? Math.round((totalCompletedAll / totalMissionsAll) * 100) : 0;
+  document.getElementById('overall-progress-text').textContent =
+    `Progres Kurikulum Keseluruhan: ${totalCompletedAll} / ${totalMissionsAll} Misi Selesai (${pct}%)`;
+  document.getElementById('overall-progress-fill').style.width = pct + '%';
+
+  // Populate Badges Modal
+  const badgeContainer = document.getElementById('badge-list-container');
+  if (badges.length === 0) {
+    badgeContainer.innerHTML = `<p style="grid-column:1/-1;font-size:12.5px;color:#94a3b8;text-align:center;padding:16px 0;">Belum ada lencana terbuka. Selesaikan misi di salah satu zona untuk mendapatkan lencana pertamamu!</p>`;
+  } else {
+    badgeContainer.innerHTML = badges.map(b => `
+      <div class="badge-item">
+        <span class="b-ico">🏆</span>
+        <span class="b-name">${b}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// Modal & Reset Handlers
+document.getElementById('btn-show-badges').addEventListener('click', () => {
+  renderPortal();
+  document.getElementById('modal-badges').classList.add('open');
+});
+
+document.getElementById('btn-close-badges').addEventListener('click', () => {
+  document.getElementById('modal-badges').classList.remove('open');
+});
+
+document.getElementById('btn-reset-all').addEventListener('click', () => {
+  const ok = confirm('Yakin ingin menghapus seluruh progres XP, Level, Koin, dan Badge dari semua 6 Zona?');
+  if (ok) {
+    localStorage.removeItem(SAVE_KEY);
+    renderPortal();
+  }
+});
+
+// Refresh otomatis saat pengguna kembali dari halaman zona (back button)
+window.addEventListener('pageshow', renderPortal);
+window.addEventListener('focus', renderPortal);
+renderPortal();
+</script>
+</body>
+</html>
